@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-nginx
+  labels:
+    app: custom-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: custom-nginx
+  template:
+    metadata:
+      labels:
+        app: custom-nginx
+    spec:
+      containers:
+      - name: custom-nginx
+        image: nginxinc/nginx-unprivileged:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-nginx
+  labels:
+    app: custom-nginx
+spec:
+  selector:
+    app: custom-nginx
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: custom-nginx
+  labels:
+    app: custom-nginx
+spec:
+  to:
+    kind: Service
+    name: custom-nginx
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
